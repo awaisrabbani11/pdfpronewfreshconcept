@@ -2,17 +2,6 @@
 import React from 'react';
 import type { Tool } from '../types';
 
-const placeholderProcess = async (files: File[], options: any, showLoader: (text: string) => void, hideLoader: () => void) => {
-    showLoader('Processing...');
-    await new Promise(res => setTimeout(res, 1000));
-    hideLoader();
-    alert('This tool is not yet implemented.');
-};
-
-const infeasibleToolProcess = (toolName: string) => async (files: File[], options: any, showLoader: (text: string) => void, hideLoader: () => void) => {
-    alert(`Client-side conversion for ${toolName} is not supported with the current libraries.`);
-};
-
 const commonIcons = {
     merge: <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="merge-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4c6fff" /><stop offset="100%" stopColor="#22d3ee" /></linearGradient></defs><path d="M12 2H32v12H12zm0 18H32v12H12z" fill="#e0f2fe" /><path d="M42 21l-8 8-8-8h5v-8h6v8z" fill="url(#merge-grad)" /><path d="M38 37H58v12H38z" fill="#dbeafe" /><path d="M12 2H32L12 22zM12 20H32L12 40z" fill="white" fillOpacity=".5" /><path d="M38 37h20L38 57z" fill="white" fillOpacity=".5" /></svg>,
     split: <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="split-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f97316" /><stop offset="100%" stopColor="#facc15" /></linearGradient></defs><path d="M10 2h30v60H10z" fill="#dbeafe" /><path d="M10 2h30L10 62z" fill="white" fillOpacity=".5" /><path d="M25 32l18 18V14zM25 32l-18 18V14z" fill="url(#split-grad)" /><path d="M23 4h4v56h-4z" stroke="#fff" strokeWidth="2" strokeDasharray="6 6" strokeLinecap="round" /></svg>,
@@ -351,18 +340,20 @@ export const tools: Tool[] = [
     {
         id: 'powerpoint-to-pdf',
         title: 'PowerPoint to PDF',
-        desc: 'Convert PPTX presentation slides to PDF pages.',
+        desc: 'Convert PPTX or PPT presentation slides to PDF pages.',
         icon: commonIcons.somethingToPdf,
-        fileType: '.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        fileType: '.pptx,.ppt,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint',
         multipleFiles: false,
-        process: infeasibleToolProcess('PPTX'),
+        process: async (files, options, showLoader, hideLoader) => {
+            alert("Client-side conversion of PowerPoint files to PDF with full fidelity is not feasible in a browser.\n\nFor the best results, please open your presentation in Microsoft PowerPoint, LibreOffice Impress, or Google Slides and use the 'Save as PDF' or 'Export to PDF' option.");
+        },
     },
     {
         id: 'excel-to-pdf',
         title: 'Excel to PDF',
-        desc: 'Convert Excel spreadsheets into PDF documents.',
+        desc: 'Convert Excel spreadsheets (XLSX, XLS) into PDF documents.',
         icon: commonIcons.somethingToPdf,
-        fileType: '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        fileType: '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel',
         multipleFiles: false,
         process: excelToPdfProcess,
     },
@@ -618,32 +609,73 @@ export const tools: Tool[] = [
         hideLoader();
         return [{ data: pdfBytes, filename: 'organized.pdf', type: 'application/pdf' }];
     } },
-    { id: 'pdf-to-pdfa', title: 'PDF to PDF/A', desc: 'Convert your PDF to PDF/A for long-term archiving.', icon: commonIcons.pdfToSomething, fileType: 'application/pdf', multipleFiles: false, process: infeasibleToolProcess('PDF/A conversion') },
-    { id: 'ocr-pdf', title: 'OCR PDF', desc: 'Recognize text in your PDF to make it searchable.', icon: commonIcons.ocr, fileType: 'application/pdf', multipleFiles: false, new: true, process: async (files, _, showLoader, hideLoader) => {
-        if (!files[0]) return;
-        showLoader('Initializing OCR...');
+    { id: 'pdf-to-pdfa', title: 'PDF to PDF/A', desc: 'Convert PDF to a more stable format for archiving. Note: Full PDF/A compliance is not guaranteed.', icon: commonIcons.pdfToSomething, fileType: 'application/pdf', multipleFiles: false, process: async (files, options, showLoader, hideLoader) => {
+        showLoader('Processing PDF...');
         const { PDFDocument } = window.pdfLib;
         const pdfBytes = await files[0].arrayBuffer();
-        const pdf = await window.pdfjsLib.getDocument({ data: pdfBytes }).promise;
-        const newPdfDoc = await PDFDocument.load(pdfBytes); 
-        const tesseract = await window.Tesseract.create({ logger: m => console.log(m) });
+        const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+        const newPdfBytes = await pdfDoc.save();
+        hideLoader();
+        return [{ data: newPdfBytes, filename: `re-saved_${files[0].name}`, type: 'application/pdf' }];
+    }},
+    { id: 'ocr-pdf', title: 'OCR PDF', desc: 'Recognize text in your PDF to make it searchable.', icon: commonIcons.ocr, fileType: 'application/pdf', multipleFiles: false, new: true, process: async (files, _, showLoader, hideLoader) => {
+        if (!files[0]) return;
+        
+        const { PDFDocument, rgb, StandardFonts } = window.pdfLib;
+        
+        showLoader('Loading PDF...');
+        const pdfBytes = await files[0].arrayBuffer();
+        const pdfJSDoc = await window.pdfjsLib.getDocument({ data: pdfBytes }).promise;
+        const outputPdfDoc = await PDFDocument.create();
+        
+        const worker = await window.Tesseract.createWorker({
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    showLoader(`OCR Progress: ${Math.round(m.progress * 100)}% on page ${m.userJobId}`);
+                }
+            },
+        });
 
-        for (let i = 0; i < pdf.numPages; i++) {
-            showLoader(`Performing OCR on page ${i + 1}/${pdf.numPages}...`);
-            const page = await pdf.getPage(i + 1);
+        for (let i = 1; i <= pdfJSDoc.numPages; i++) {
+            showLoader(`Processing page ${i}/${pdfJSDoc.numPages}`);
+            const page = await pdfJSDoc.getPage(i);
             const viewport = page.getViewport({ scale: 2.0 });
+
             const canvas = document.createElement('canvas');
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             const context = canvas.getContext('2d');
             await page.render({ canvasContext: context, viewport }).promise;
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            const jpgImageBytes = await fetch(imageData).then(res => res.arrayBuffer());
+            const jpgImage = await outputPdfDoc.embedJpg(jpgImageBytes);
+            const pdfPage = outputPdfDoc.addPage([viewport.width, viewport.height]);
+            pdfPage.drawImage(jpgImage, { x: 0, y: 0, width: viewport.width, height: viewport.height });
+
+            const { data } = await worker.recognize(canvas, 'eng', { userJobId: `${i}`});
             
-            const { data } = await tesseract.recognize(canvas);
+            const font = await outputPdfDoc.embedFont(StandardFonts.Helvetica);
+
+            data.words.forEach(word => {
+                const { x0, y0, x1, y1 } = word.bbox;
+                const fontSize = (y1 - y0) * 0.8;
+                pdfPage.drawText(word.text, {
+                    x: x0,
+                    y: viewport.height - y1,
+                    font,
+                    size: fontSize,
+                    color: rgb(0, 0, 0),
+                    opacity: 0,
+                });
+            });
         }
-        await tesseract.terminate();
+
+        await worker.terminate();
+        showLoader('Saving searchable PDF...');
+        const ocrPdfBytes = await outputPdfDoc.save();
         hideLoader();
-        alert('OCR processing is complex. A simple text extraction will be performed instead for now.');
-        return tools.find(t => t.id === 'pdf-to-word').process(files, {}, showLoader, hideLoader);
+        return [{ data: ocrPdfBytes, filename: 'ocr-result.pdf', type: 'application/pdf' }];
     }},
     { id: 'add-page-numbers', title: 'Add Page Numbers', desc: 'Insert page numbers into your PDF document.', icon: commonIcons.pageNumbers, fileType: 'application/pdf', multipleFiles: false, options: (setOptions, options) => (
         <select
@@ -706,7 +738,31 @@ export const tools: Tool[] = [
         }
     }},
     { id: 'png-to-pdf', title: 'PNG to PDF', desc: 'Convert PNG images to PDF files.', icon: commonIcons.somethingToPdf, fileType: 'image/png', multipleFiles: true, process: imagesToPdfProcess },
-    { id: 'tiff-to-pdf', title: 'TIFF to PDF', desc: 'Convert TIFF images to PDF.', icon: commonIcons.somethingToPdf, fileType: 'image/tiff', multipleFiles: true, process: infeasibleToolProcess('TIFF') },
-    { id: 'powerpoint-to-pdf-2', title: 'PPT to PDF', desc: 'Convert PPT files to PDF.', icon: commonIcons.somethingToPdf, fileType: '.ppt', multipleFiles: false, process: infeasibleToolProcess('PPT (Legacy)') },
-    { id: 'excel-to-pdf-2', title: 'XLS to PDF', desc: 'Convert XLS files to PDF.', icon: commonIcons.somethingToPdf, fileType: '.xls', multipleFiles: false, process: excelToPdfProcess },
+    { id: 'tiff-to-pdf', title: 'TIFF to PDF', desc: 'Convert TIFF images to PDF.', icon: commonIcons.somethingToPdf, fileType: 'image/tiff', multipleFiles: true, process: async (files, options, showLoader, hideLoader) => {
+        showLoader('Converting TIFF to PDF...');
+        const { PDFDocument } = window.pdfLib;
+        const pdfDoc = await PDFDocument.create();
+
+        for (const file of files) {
+            const tiffBytes = await file.arrayBuffer();
+            const tiff = new window.Tiff({ buffer: tiffBytes });
+            const numPages = tiff.countDirectory();
+
+            for (let i = 0; i < numPages; i++) {
+                showLoader(`Processing page ${i + 1} of ${file.name}`);
+                tiff.setDirectory(i);
+                const canvas = tiff.toCanvas();
+                const pngDataUrl = canvas.toDataURL('image/png');
+                const pngBytes = await fetch(pngDataUrl).then(res => res.arrayBuffer());
+                const pngImage = await pdfDoc.embedPng(pngBytes);
+                
+                const page = pdfDoc.addPage([pngImage.width, pngImage.height]);
+                page.drawImage(pngImage, { x: 0, y: 0, width: pngImage.width, height: pngImage.height });
+            }
+        }
+        
+        const pdfBytes = await pdfDoc.save();
+        hideLoader();
+        return [{ data: pdfBytes, filename: 'tiff-converted.pdf', type: 'application/pdf' }];
+    }},
 ];

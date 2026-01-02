@@ -1,4 +1,3 @@
-
 // Augment the global window object
 declare global {
     interface Window {
@@ -11,6 +10,8 @@ declare global {
         pptxgen: any;
         fabric: any;
         JSZip: any;
+        // FIX: Add Tiff to window interface for TIFF to PDF conversion.
+        Tiff: any;
     }
 }
 
