@@ -7,7 +7,7 @@ export const ArticleSection: React.FC = () => {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 prose lg:prose-xl dark:prose-invert">
                 <h2>Why PDF Tools are Essential in the Digital Age</h2>
                 <p>
-                    In today's fast-paced digital environment, the Portable Document Format (PDF) has become the standard for sharing and archiving documents. Its ability to preserve formatting across different devices and operating systems makes it indispensable. However, working with PDFs can often be challenging. That's where <strong>One Page Tools</strong> comes in. We provide a complete suite of free, browser-based tools to make your PDF management seamless and secure.
+                    In today's fast-paced digital environment, the Portable Document Format (PDF) has become the standard for sharing and archiving documents. Its ability to preserve formatting across different devices and operating systems makes it indispensable. However, working with PDFs can often be challenging. That's where <strong>PDFPRO.PRO</strong> comes in. We provide a complete suite of free, browser-based tools to make your PDF management seamless and secure.
                 </p>
                 <h3>Your All-in-One, Secure PDF Solution</h3>
                 <p>
