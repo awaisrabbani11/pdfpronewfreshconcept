@@ -36,10 +36,10 @@ const ToolCard: React.FC<{ tool: Tool; onSelect: () => void }> = ({ tool, onSele
         <div
             ref={cardRef}
             onClick={onSelect}
-            className="reveal-target group relative bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-2xl dark:hover:shadow-red-900/40 hover:-translate-y-2 border border-gray-200 dark:border-gray-700 hover:border-red-500 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
+            className="reveal-target group relative bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-2xl dark:hover:shadow-indigo-900/40 hover:-translate-y-2 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 transition-all duration-300 cursor-pointer flex flex-col items-center text-center"
         >
             {tool.new && (
-                 <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">NEW!</span>
+                 <span className="absolute top-2 right-2 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full">NEW!</span>
             )}
             <div className="w-16 h-16 mb-4">{tool.icon}</div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{tool.title}</h3>

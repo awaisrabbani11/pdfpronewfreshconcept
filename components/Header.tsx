@@ -40,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
 
     return (
         <>
-            <header className={`sticky top-0 z-40 transition-shadow duration-300 bg-red-600 dark:bg-red-800 ${isScrolled ? 'shadow-lg bg-red-600/90 dark:bg-red-800/90 backdrop-blur-md' : ''}`}>
+            <header className={`sticky top-0 z-40 transition-shadow duration-300 bg-indigo-600 dark:bg-indigo-800 ${isScrolled ? 'shadow-lg bg-indigo-600/90 dark:bg-indigo-800/90 backdrop-blur-md' : ''}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
                         <a href="#" className="flex-shrink-0">
@@ -49,12 +49,12 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
                         <div className="flex items-center">
                             <nav className="hidden md:flex md:items-center md:space-x-8">
                                 {navLinks.map((link) => (
-                                    <a key={link.name} href={link.href} className="text-red-100 hover:text-white transition duration-150 ease-in-out font-medium">
+                                    <a key={link.name} href={link.href} className="text-indigo-100 hover:text-white transition duration-150 ease-in-out font-medium">
                                         {link.name}
                                     </a>
                                 ))}
                             </nav>
-                            <button onClick={toggleTheme} className="ml-6 text-red-200 hover:text-white focus:outline-none transition-colors duration-200">
+                            <button onClick={toggleTheme} className="ml-6 text-indigo-200 hover:text-white focus:outline-none transition-colors duration-200">
                                 {theme === 'light' ? <MoonIcon /> : <SunIcon />}
                             </button>
                             <div className="md:hidden ml-4">
@@ -70,10 +70,10 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             </header>
 
             {/* Mobile Menu */}
-            <div className={`fixed inset-0 bg-red-600 dark:bg-red-800 z-30 transform ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out md:hidden`}>
+            <div className={`fixed inset-0 bg-indigo-600 dark:bg-indigo-800 z-30 transform ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out md:hidden`}>
                 <div className="flex flex-col items-center justify-center h-full space-y-8">
                     {navLinks.map((link) => (
-                        <a key={link.name} href={link.href} onClick={() => setIsMenuOpen(false)} className="text-3xl font-semibold text-white hover:text-red-200 transition-colors duration-200">
+                        <a key={link.name} href={link.href} onClick={() => setIsMenuOpen(false)} className="text-3xl font-semibold text-white hover:text-indigo-200 transition-colors duration-200">
                             {link.name}
                         </a>
                     ))}
