@@ -13,8 +13,6 @@ const App: React.FC = () => {
     const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-    const [librariesLoaded, setLibrariesLoaded] = useState(false);
-    const [libraryLoadError, setLibraryLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         if (theme === 'dark') {
@@ -60,54 +58,12 @@ const App: React.FC = () => {
         };
     }, [isModalOpen, closeModal]);
     
-    // Check for required libraries before rendering the app
     useEffect(() => {
-        const requiredLibs: (keyof Window)[] = ['pdfLib', 'pdfjsLib', 'Tesseract', 'html2pdf', 'mammoth', 'XLSX', 'pptxgen', 'fabric', 'JSZip', 'Tiff'];
-        let checks = 0;
-        const maxChecks = 100; // 10 seconds timeout (100 * 100ms)
-
-        const intervalId = setInterval(() => {
-            const allLoaded = requiredLibs.every(lib => window[lib]);
-
-            if (allLoaded) {
-                // Once all libs are loaded, configure pdf.js worker
-                if (window.pdfjsLib) {
-                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
-                }
-                setLibrariesLoaded(true);
-                clearInterval(intervalId);
-            } else if (checks > maxChecks) {
-                const missing = requiredLibs.filter(lib => !window[lib]);
-                setLibraryLoadError(`Failed to load essential libraries: ${missing.join(', ')}. Please check your network and refresh the page.`);
-                clearInterval(intervalId);
-            }
-            checks++;
-        }, 100);
-
-        return () => clearInterval(intervalId);
+      // Set pdf.js worker source
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+      }
     }, []);
-
-    if (libraryLoadError) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 p-4">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold mb-2">Application Error</h1>
-                    <p>{libraryLoadError}</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (!librariesLoaded) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Initializing PDF Tools...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="bg-[#f8f8fa] dark:bg-gray-900">
