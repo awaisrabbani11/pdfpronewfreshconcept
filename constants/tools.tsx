@@ -2,6 +2,27 @@
 import React from 'react';
 import type { Tool } from '../types';
 
+type Lib = 'pdfLib' | 'pdfjsLib' | 'Tesseract' | 'mammoth' | 'XLSX' | 'pptxgen' | 'fabric' | 'JSZip' | 'Tiff' | 'html2pdf';
+
+const checkDependencies = (dependencies: Lib[], hideLoader: () => void): boolean => {
+    const missing: string[] = [];
+    for (const dep of dependencies) {
+        if (!window[dep]) {
+            missing.push(dep);
+        }
+    }
+    if (missing.length > 0) {
+        // Use setTimeout to ensure the alert doesn't block the current execution thread, allowing UI to update.
+        setTimeout(() => {
+            alert(`Error: A required library (${missing.join(', ')}) failed to load. Please check your internet connection and refresh the page.`);
+        }, 0);
+        hideLoader();
+        return false;
+    }
+    return true;
+};
+
+
 const commonIcons = {
     merge: <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="merge-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4c6fff" /><stop offset="100%" stopColor="#22d3ee" /></linearGradient></defs><path d="M12 2H32v12H12zm0 18H32v12H12z" fill="#e0f2fe" /><path d="M42 21l-8 8-8-8h5v-8h6v8z" fill="url(#merge-grad)" /><path d="M38 37H58v12H38z" fill="#dbeafe" /><path d="M12 2H32L12 22zM12 20H32L12 40z" fill="white" fillOpacity=".5" /><path d="M38 37h20L38 57z" fill="white" fillOpacity=".5" /></svg>,
     split: <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="split-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f97316" /><stop offset="100%" stopColor="#facc15" /></linearGradient></defs><path d="M10 2h30v60H10z" fill="#dbeafe" /><path d="M10 2h30L10 62z" fill="white" fillOpacity=".5" /><path d="M25 32l18 18V14zM25 32l-18 18V14z" fill="url(#split-grad)" /><path d="M23 4h4v56h-4z" stroke="#fff" strokeWidth="2" strokeDasharray="6 6" strokeLinecap="round" /></svg>,
@@ -20,6 +41,7 @@ const commonIcons = {
 };
 
 const imagesToPdfProcess = async (files: File[], _: any, showLoader: (text: string) => void, hideLoader: () => void) => {
+    if (!checkDependencies(['pdfLib'], hideLoader)) return;
     const { PDFDocument } = window.pdfLib;
     showLoader('Converting images to PDF...');
     const pdfDoc = await PDFDocument.create();
@@ -36,6 +58,7 @@ const imagesToPdfProcess = async (files: File[], _: any, showLoader: (text: stri
 
 const excelToPdfProcess = async (files: File[], _: any, showLoader: (text: string) => void, hideLoader: () => void) => {
     if (!files[0]) return;
+    if (!checkDependencies(['XLSX', 'html2pdf'], hideLoader)) return;
     showLoader('Converting Excel to PDF...');
     const data = await files[0].arrayBuffer();
     const workbook = window.XLSX.read(data, { type: 'array' });
@@ -77,6 +100,7 @@ export const tools: Tool[] = [
         fileType: 'application/pdf',
         multipleFiles: true,
         process: async (files, _, showLoader, hideLoader) => {
+            if (!checkDependencies(['pdfLib'], hideLoader)) return;
             const { PDFDocument } = window.pdfLib;
             showLoader('Merging PDFs...');
             const mergedPdf = await PDFDocument.create();
@@ -108,8 +132,9 @@ export const tools: Tool[] = [
             />
         ),
         process: async (files, options, showLoader, hideLoader) => {
-            const { PDFDocument } = window.pdfLib;
             if (!files[0]) return;
+            if (!checkDependencies(['pdfLib'], hideLoader)) return;
+            const { PDFDocument } = window.pdfLib;
             showLoader('Splitting PDF...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
@@ -155,6 +180,8 @@ export const tools: Tool[] = [
         ),
         process: async (files, options, showLoader, hideLoader) => {
             if (!files[0]) return;
+            if (!checkDependencies(['pdfLib', 'pdfjsLib'], hideLoader)) return;
+
             showLoader('Loading PDF...');
             const { PDFDocument } = window.pdfLib;
             const pdfBytes = await files[0].arrayBuffer();
@@ -193,6 +220,7 @@ export const tools: Tool[] = [
         multipleFiles: false,
         process: async (files, _, showLoader, hideLoader) => {
             if (!files[0]) return;
+            if (!checkDependencies(['pdfjsLib'], hideLoader)) return;
             showLoader('Converting PDF to Text...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdf = await window.pdfjsLib.getDocument({data: pdfBytes}).promise;
@@ -215,6 +243,7 @@ export const tools: Tool[] = [
         multipleFiles: false,
         process: async (files, _, showLoader, hideLoader) => {
             if (!files[0]) return;
+            if (!checkDependencies(['pdfjsLib', 'pptxgen'], hideLoader)) return;
             showLoader('Loading PDF...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdf = await window.pdfjsLib.getDocument({data: pdfBytes}).promise;
@@ -248,6 +277,7 @@ export const tools: Tool[] = [
         multipleFiles: false,
         process: async (files, _, showLoader, hideLoader) => {
             if (!files[0]) return;
+            if (!checkDependencies(['pdfjsLib'], hideLoader)) return;
             showLoader('Extracting text to CSV...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdf = await window.pdfjsLib.getDocument({data: pdfBytes}).promise;
@@ -281,6 +311,7 @@ export const tools: Tool[] = [
         multipleFiles: false,
         process: async (files, _, showLoader, hideLoader) => {
             if (!files[0]) return;
+            if (!checkDependencies(['pdfjsLib', 'JSZip'], hideLoader)) return;
             showLoader('Loading PDF...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdf = await window.pdfjsLib.getDocument({data: pdfBytes}).promise;
@@ -325,6 +356,7 @@ export const tools: Tool[] = [
         multipleFiles: false,
         process: async (files, _, showLoader, hideLoader) => {
             if (!files[0]) return;
+            if (!checkDependencies(['mammoth', 'html2pdf'], hideLoader)) return;
             showLoader('Converting Word to PDF...');
             const arrayBuffer = await files[0].arrayBuffer();
             const { value: html } = await window.mammoth.convertToHtml({ arrayBuffer });
@@ -345,6 +377,7 @@ export const tools: Tool[] = [
         fileType: '.pptx,.ppt,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint',
         multipleFiles: false,
         process: async (files, options, showLoader, hideLoader) => {
+            hideLoader();
             alert("Client-side conversion of PowerPoint files to PDF with full fidelity is not feasible in a browser.\n\nFor the best results, please open your presentation in Microsoft PowerPoint, LibreOffice Impress, or Google Slides and use the 'Save as PDF' or 'Export to PDF' option.");
         },
     },
@@ -375,6 +408,7 @@ export const tools: Tool[] = [
         multipleFiles: false,
         process: async (files, options, showLoader, hideLoader) => {
             if (!files[0]) return;
+            if (!checkDependencies(['pdfLib', 'fabric'], hideLoader)) return;
             const { PDFDocument } = window.pdfLib;
             const { edits } = options;
             showLoader('Applying edits...');
@@ -394,15 +428,18 @@ export const tools: Tool[] = [
                     
                     fabricCanvas.clear();
                     fabricCanvas.setDimensions({ width, height });
-                    fabricCanvas.loadFromJSON(edits[i], async () => {
-                        const dataUrl = fabricCanvas.toDataURL({ format: 'png' });
-                        const pngImageBytes = await fetch(dataUrl).then(res => res.arrayBuffer());
-                        const pngImage = await pdfDoc.embedPng(pngImageBytes);
-                        page.drawImage(pngImage, { x: 0, y: 0, width, height });
+                    
+                    // Create a promise to await fabric's async loading
+                    await new Promise<void>(resolve => {
+                        fabricCanvas.loadFromJSON(edits[i], () => {
+                            resolve();
+                        });
                     });
-                     // This is async, we need to wait. A proper implementation would use promises.
-                    // For simplicity, we'll assume it works quickly enough.
-                    await new Promise(res => setTimeout(res, 100)); // small delay to help fabric render
+
+                    const dataUrl = fabricCanvas.toDataURL({ format: 'png' });
+                    const pngImageBytes = await fetch(dataUrl).then(res => res.arrayBuffer());
+                    const pngImage = await pdfDoc.embedPng(pngImageBytes);
+                    page.drawImage(pngImage, { x: 0, y: 0, width, height });
                 }
             }
             
@@ -424,7 +461,7 @@ export const tools: Tool[] = [
           const fabricCanvasRef = React.useRef<any>(null);
 
           React.useEffect(() => {
-            if (canvasRef.current) {
+            if (canvasRef.current && window.fabric) {
                 const fabricCanvas = new window.fabric.Canvas(canvasRef.current, {
                     isDrawingMode: true,
                     width: 300,
@@ -457,8 +494,14 @@ export const tools: Tool[] = [
           );
         },
         process: async (files, options, showLoader, hideLoader) => {
+            if (!files[0] || !options.signatureImage) {
+                hideLoader();
+                alert('Please draw a signature.');
+                return;
+            }
+            if (!checkDependencies(['pdfLib'], hideLoader)) return;
+
             const { PDFDocument } = window.pdfLib;
-            if (!files[0] || !options.signatureImage) return alert('Please draw a signature.');
             showLoader('Adding signature...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
@@ -488,8 +531,13 @@ export const tools: Tool[] = [
             </div>
         ),
         process: async (files, options, showLoader, hideLoader) => {
+            if (!files[0] || !options.text) {
+                hideLoader();
+                alert('Please enter watermark text.');
+                return;
+            };
+            if (!checkDependencies(['pdfLib'], hideLoader)) return;
             const { PDFDocument, rgb, degrees, StandardFonts } = window.pdfLib;
-            if (!files[0] || !options.text) return alert('Please enter watermark text.');
             showLoader('Adding watermark...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
@@ -532,8 +580,9 @@ export const tools: Tool[] = [
             </select>
         ),
         process: async (files, options, showLoader, hideLoader) => {
-            const { PDFDocument, degrees } = window.pdfLib;
             if (!files[0]) return;
+            if (!checkDependencies(['pdfLib'], hideLoader)) return;
+            const { PDFDocument, degrees } = window.pdfLib;
             showLoader('Rotating PDF...');
             const angle = options.angle || 90;
             const pdfBytes = await files[0].arrayBuffer();
@@ -547,6 +596,7 @@ export const tools: Tool[] = [
     },
     { id: 'html-to-pdf', title: 'HTML to PDF', desc: 'Convert webpages to PDF.', icon: commonIcons.somethingToPdf, fileType: '.html,text/html', multipleFiles: false, process: async (files, _, showLoader, hideLoader) => {
         if (!files[0]) return;
+        if (!checkDependencies(['html2pdf'], hideLoader)) return;
         showLoader('Converting HTML to PDF...');
         const htmlContent = await files[0].text();
         const element = document.createElement('div');
@@ -562,6 +612,7 @@ export const tools: Tool[] = [
             onChange={e => setOptions({ password: e.target.value })} />
     ), process: async (files, options, showLoader, hideLoader) => {
         if (!files[0]) return;
+        if (!checkDependencies(['pdfLib'], hideLoader)) return;
         showLoader('Unlocking PDF...');
         const { PDFDocument } = window.pdfLib;
         const pdfBytes = await files[0].arrayBuffer();
@@ -583,7 +634,12 @@ export const tools: Tool[] = [
         <input type="password" placeholder="Enter new password" className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             onChange={e => setOptions({ password: e.target.value })} />
     ), process: async (files, options, showLoader, hideLoader) => {
-        if (!files[0] || !options.password) return alert('Please enter a password.');
+        if (!files[0] || !options.password) {
+             hideLoader();
+             alert('Please enter a password.');
+             return;
+        }
+        if (!checkDependencies(['pdfLib'], hideLoader)) return;
         showLoader('Protecting PDF...');
         const { PDFDocument } = window.pdfLib;
         const pdfBytes = await files[0].arrayBuffer();
@@ -594,6 +650,7 @@ export const tools: Tool[] = [
     }},
     { id: 'organize-pdf', title: 'Organize PDF', desc: 'Reorder, delete, or add pages to your PDF.', icon: commonIcons.organize, fileType: 'application/pdf', multipleFiles: false, process: async (files, options, showLoader, hideLoader) => {
         if (!files[0]) return;
+        if (!checkDependencies(['pdfLib'], hideLoader)) return;
         showLoader('Organizing PDF...');
         const { PDFDocument } = window.pdfLib;
         const { pageOrder } = options;
@@ -610,6 +667,7 @@ export const tools: Tool[] = [
         return [{ data: pdfBytes, filename: 'organized.pdf', type: 'application/pdf' }];
     } },
     { id: 'pdf-to-pdfa', title: 'PDF to PDF/A', desc: 'Convert PDF to a more stable format for archiving. Note: Full PDF/A compliance is not guaranteed.', icon: commonIcons.pdfToSomething, fileType: 'application/pdf', multipleFiles: false, process: async (files, options, showLoader, hideLoader) => {
+        if (!checkDependencies(['pdfLib'], hideLoader)) return;
         showLoader('Processing PDF...');
         const { PDFDocument } = window.pdfLib;
         const pdfBytes = await files[0].arrayBuffer();
@@ -620,6 +678,7 @@ export const tools: Tool[] = [
     }},
     { id: 'ocr-pdf', title: 'OCR PDF', desc: 'Recognize text in your PDF to make it searchable.', icon: commonIcons.ocr, fileType: 'application/pdf', multipleFiles: false, new: true, process: async (files, _, showLoader, hideLoader) => {
         if (!files[0]) return;
+        if (!checkDependencies(['pdfLib', 'pdfjsLib', 'Tesseract'], hideLoader)) return;
         
         const { PDFDocument, rgb, StandardFonts } = window.pdfLib;
         
@@ -690,6 +749,7 @@ export const tools: Tool[] = [
         </select>
     ), process: async (files, options, showLoader, hideLoader) => {
         if (!files[0]) return;
+        if (!checkDependencies(['pdfLib'], hideLoader)) return;
         showLoader('Adding page numbers...');
         const { PDFDocument, StandardFonts, rgb } = window.pdfLib;
         const pdfBytes = await files[0].arrayBuffer();
@@ -723,6 +783,7 @@ export const tools: Tool[] = [
     }},
     { id: 'repair-pdf', title: 'Repair PDF', desc: 'Attempt to recover data from a corrupt PDF.', icon: commonIcons.edit, fileType: 'application/pdf', multipleFiles: false, process: async (files, _, showLoader, hideLoader) => {
         if (!files[0]) return;
+        if (!checkDependencies(['pdfLib'], hideLoader)) return;
         showLoader('Attempting to repair PDF...');
         const { PDFDocument } = window.pdfLib;
         try {
@@ -739,6 +800,7 @@ export const tools: Tool[] = [
     }},
     { id: 'png-to-pdf', title: 'PNG to PDF', desc: 'Convert PNG images to PDF files.', icon: commonIcons.somethingToPdf, fileType: 'image/png', multipleFiles: true, process: imagesToPdfProcess },
     { id: 'tiff-to-pdf', title: 'TIFF to PDF', desc: 'Convert TIFF images to PDF.', icon: commonIcons.somethingToPdf, fileType: 'image/tiff', multipleFiles: true, process: async (files, options, showLoader, hideLoader) => {
+        if (!checkDependencies(['pdfLib', 'Tiff'], hideLoader)) return;
         showLoader('Converting TIFF to PDF...');
         const { PDFDocument } = window.pdfLib;
         const pdfDoc = await PDFDocument.create();
