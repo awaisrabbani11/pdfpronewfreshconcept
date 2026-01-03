@@ -1,7 +1,8 @@
+
 // Augment the global window object
 declare global {
     interface Window {
-        pdfLib: any;
+        PDFLib: any;
         pdfjsLib: any;
         Tesseract: any;
         html2pdf: any;

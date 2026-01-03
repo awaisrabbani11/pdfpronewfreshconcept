@@ -2,7 +2,7 @@
 import React from 'react';
 import type { Tool } from '../types';
 
-type Lib = 'pdfLib' | 'pdfjsLib' | 'Tesseract' | 'mammoth' | 'XLSX' | 'pptxgen' | 'fabric' | 'JSZip' | 'Tiff' | 'html2pdf';
+type Lib = 'PDFLib' | 'pdfjsLib' | 'Tesseract' | 'mammoth' | 'XLSX' | 'pptxgen' | 'fabric' | 'JSZip' | 'Tiff' | 'html2pdf';
 
 const checkDependencies = (dependencies: Lib[], hideLoader: () => void): boolean => {
     const missing: string[] = [];
@@ -41,8 +41,8 @@ const commonIcons = {
 };
 
 const imagesToPdfProcess = async (files: File[], _: any, showLoader: (text: string) => void, hideLoader: () => void) => {
-    if (!checkDependencies(['pdfLib'], hideLoader)) return;
-    const { PDFDocument } = window.pdfLib;
+    if (!checkDependencies(['PDFLib'], hideLoader)) return;
+    const { PDFDocument } = window.PDFLib;
     showLoader('Converting images to PDF...');
     const pdfDoc = await PDFDocument.create();
     for (const file of files) {
@@ -100,8 +100,8 @@ export const tools: Tool[] = [
         fileType: 'application/pdf',
         multipleFiles: true,
         process: async (files, _, showLoader, hideLoader) => {
-            if (!checkDependencies(['pdfLib'], hideLoader)) return;
-            const { PDFDocument } = window.pdfLib;
+            if (!checkDependencies(['PDFLib'], hideLoader)) return;
+            const { PDFDocument } = window.PDFLib;
             showLoader('Merging PDFs...');
             const mergedPdf = await PDFDocument.create();
             for (const file of files) {
@@ -133,8 +133,8 @@ export const tools: Tool[] = [
         ),
         process: async (files, options, showLoader, hideLoader) => {
             if (!files[0]) return;
-            if (!checkDependencies(['pdfLib'], hideLoader)) return;
-            const { PDFDocument } = window.pdfLib;
+            if (!checkDependencies(['PDFLib'], hideLoader)) return;
+            const { PDFDocument } = window.PDFLib;
             showLoader('Splitting PDF...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
@@ -180,10 +180,10 @@ export const tools: Tool[] = [
         ),
         process: async (files, options, showLoader, hideLoader) => {
             if (!files[0]) return;
-            if (!checkDependencies(['pdfLib', 'pdfjsLib'], hideLoader)) return;
+            if (!checkDependencies(['PDFLib', 'pdfjsLib'], hideLoader)) return;
 
             showLoader('Loading PDF...');
-            const { PDFDocument } = window.pdfLib;
+            const { PDFDocument } = window.PDFLib;
             const pdfBytes = await files[0].arrayBuffer();
             const pdf = await window.pdfjsLib.getDocument({ data: pdfBytes }).promise;
             const newPdfDoc = await PDFDocument.create();
@@ -408,8 +408,8 @@ export const tools: Tool[] = [
         multipleFiles: false,
         process: async (files, options, showLoader, hideLoader) => {
             if (!files[0]) return;
-            if (!checkDependencies(['pdfLib', 'fabric'], hideLoader)) return;
-            const { PDFDocument } = window.pdfLib;
+            if (!checkDependencies(['PDFLib', 'fabric'], hideLoader)) return;
+            const { PDFDocument } = window.PDFLib;
             const { edits } = options;
             showLoader('Applying edits...');
 
@@ -499,9 +499,9 @@ export const tools: Tool[] = [
                 alert('Please draw a signature.');
                 return;
             }
-            if (!checkDependencies(['pdfLib'], hideLoader)) return;
+            if (!checkDependencies(['PDFLib'], hideLoader)) return;
 
-            const { PDFDocument } = window.pdfLib;
+            const { PDFDocument } = window.PDFLib;
             showLoader('Adding signature...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
@@ -536,8 +536,8 @@ export const tools: Tool[] = [
                 alert('Please enter watermark text.');
                 return;
             };
-            if (!checkDependencies(['pdfLib'], hideLoader)) return;
-            const { PDFDocument, rgb, degrees, StandardFonts } = window.pdfLib;
+            if (!checkDependencies(['PDFLib'], hideLoader)) return;
+            const { PDFDocument, rgb, degrees, StandardFonts } = window.PDFLib;
             showLoader('Adding watermark...');
             const pdfBytes = await files[0].arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
@@ -581,8 +581,8 @@ export const tools: Tool[] = [
         ),
         process: async (files, options, showLoader, hideLoader) => {
             if (!files[0]) return;
-            if (!checkDependencies(['pdfLib'], hideLoader)) return;
-            const { PDFDocument, degrees } = window.pdfLib;
+            if (!checkDependencies(['PDFLib'], hideLoader)) return;
+            const { PDFDocument, degrees } = window.PDFLib;
             showLoader('Rotating PDF...');
             const angle = options.angle || 90;
             const pdfBytes = await files[0].arrayBuffer();
@@ -612,9 +612,9 @@ export const tools: Tool[] = [
             onChange={e => setOptions({ password: e.target.value })} />
     ), process: async (files, options, showLoader, hideLoader) => {
         if (!files[0]) return;
-        if (!checkDependencies(['pdfLib'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib'], hideLoader)) return;
         showLoader('Unlocking PDF...');
-        const { PDFDocument } = window.pdfLib;
+        const { PDFDocument } = window.PDFLib;
         const pdfBytes = await files[0].arrayBuffer();
         try {
             const pdfDoc = await PDFDocument.load(pdfBytes, {
@@ -639,9 +639,9 @@ export const tools: Tool[] = [
              alert('Please enter a password.');
              return;
         }
-        if (!checkDependencies(['pdfLib'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib'], hideLoader)) return;
         showLoader('Protecting PDF...');
-        const { PDFDocument } = window.pdfLib;
+        const { PDFDocument } = window.PDFLib;
         const pdfBytes = await files[0].arrayBuffer();
         const pdfDoc = await PDFDocument.load(pdfBytes);
         const protectedBytes = await pdfDoc.save({ userPassword: options.password });
@@ -650,9 +650,9 @@ export const tools: Tool[] = [
     }},
     { id: 'organize-pdf', title: 'Organize PDF', desc: 'Reorder, delete, or add pages to your PDF.', icon: commonIcons.organize, fileType: 'application/pdf', multipleFiles: false, process: async (files, options, showLoader, hideLoader) => {
         if (!files[0]) return;
-        if (!checkDependencies(['pdfLib'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib'], hideLoader)) return;
         showLoader('Organizing PDF...');
-        const { PDFDocument } = window.pdfLib;
+        const { PDFDocument } = window.PDFLib;
         const { pageOrder } = options;
         
         const existingPdfBytes = await files[0].arrayBuffer();
@@ -667,9 +667,9 @@ export const tools: Tool[] = [
         return [{ data: pdfBytes, filename: 'organized.pdf', type: 'application/pdf' }];
     } },
     { id: 'pdf-to-pdfa', title: 'PDF to PDF/A', desc: 'Convert PDF to a more stable format for archiving. Note: Full PDF/A compliance is not guaranteed.', icon: commonIcons.pdfToSomething, fileType: 'application/pdf', multipleFiles: false, process: async (files, options, showLoader, hideLoader) => {
-        if (!checkDependencies(['pdfLib'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib'], hideLoader)) return;
         showLoader('Processing PDF...');
-        const { PDFDocument } = window.pdfLib;
+        const { PDFDocument } = window.PDFLib;
         const pdfBytes = await files[0].arrayBuffer();
         const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
         const newPdfBytes = await pdfDoc.save();
@@ -678,9 +678,9 @@ export const tools: Tool[] = [
     }},
     { id: 'ocr-pdf', title: 'OCR PDF', desc: 'Recognize text in your PDF to make it searchable.', icon: commonIcons.ocr, fileType: 'application/pdf', multipleFiles: false, new: true, process: async (files, _, showLoader, hideLoader) => {
         if (!files[0]) return;
-        if (!checkDependencies(['pdfLib', 'pdfjsLib', 'Tesseract'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib', 'pdfjsLib', 'Tesseract'], hideLoader)) return;
         
-        const { PDFDocument, rgb, StandardFonts } = window.pdfLib;
+        const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
         
         showLoader('Loading PDF...');
         const pdfBytes = await files[0].arrayBuffer();
@@ -749,9 +749,9 @@ export const tools: Tool[] = [
         </select>
     ), process: async (files, options, showLoader, hideLoader) => {
         if (!files[0]) return;
-        if (!checkDependencies(['pdfLib'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib'], hideLoader)) return;
         showLoader('Adding page numbers...');
-        const { PDFDocument, StandardFonts, rgb } = window.pdfLib;
+        const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
         const pdfBytes = await files[0].arrayBuffer();
         const pdfDoc = await PDFDocument.load(pdfBytes);
         const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -783,9 +783,9 @@ export const tools: Tool[] = [
     }},
     { id: 'repair-pdf', title: 'Repair PDF', desc: 'Attempt to recover data from a corrupt PDF.', icon: commonIcons.edit, fileType: 'application/pdf', multipleFiles: false, process: async (files, _, showLoader, hideLoader) => {
         if (!files[0]) return;
-        if (!checkDependencies(['pdfLib'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib'], hideLoader)) return;
         showLoader('Attempting to repair PDF...');
-        const { PDFDocument } = window.pdfLib;
+        const { PDFDocument } = window.PDFLib;
         try {
             const pdfBytes = await files[0].arrayBuffer();
             const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
@@ -800,9 +800,9 @@ export const tools: Tool[] = [
     }},
     { id: 'png-to-pdf', title: 'PNG to PDF', desc: 'Convert PNG images to PDF files.', icon: commonIcons.somethingToPdf, fileType: 'image/png', multipleFiles: true, process: imagesToPdfProcess },
     { id: 'tiff-to-pdf', title: 'TIFF to PDF', desc: 'Convert TIFF images to PDF.', icon: commonIcons.somethingToPdf, fileType: 'image/tiff', multipleFiles: true, process: async (files, options, showLoader, hideLoader) => {
-        if (!checkDependencies(['pdfLib', 'Tiff'], hideLoader)) return;
+        if (!checkDependencies(['PDFLib', 'Tiff'], hideLoader)) return;
         showLoader('Converting TIFF to PDF...');
-        const { PDFDocument } = window.pdfLib;
+        const { PDFDocument } = window.PDFLib;
         const pdfDoc = await PDFDocument.create();
 
         for (const file of files) {
